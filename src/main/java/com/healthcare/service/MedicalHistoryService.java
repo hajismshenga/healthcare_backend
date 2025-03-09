@@ -1,25 +1,25 @@
 package com.healthcare.service;
 
-import com.healthcare.model.LaboratoryTest;
+import com.healthcare.model.MedicalHistory;
 import com.healthcare.model.Appointment;
-import com.healthcare.repository.LaboratoryTestRepository;
+import com.healthcare.repository.MedicalHistoryRepository;
 import com.healthcare.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LaboratoryTestService {
+public class MedicalHistoryService {
 
     @Autowired
-    private LaboratoryTestRepository laboratoryTestRepository;
+    private MedicalHistoryRepository medicalHistoryRepository;
 
     @Autowired
     private AppointmentRepository appointmentRepository;
 
-    // Create laboratory test linked to an appointment
-    public LaboratoryTest createLaboratoryTest(Long appointmentId, LaboratoryTest laboratoryTest) {
+    // Create medical history linked to an appointment
+    public MedicalHistory createMedicalHistory(Long appointmentId, MedicalHistory medicalHistory) {
         Appointment appointment = appointmentRepository.findById(appointmentId).orElseThrow(() -> new RuntimeException("Appointment not found"));
-        laboratoryTest.setAppointment(appointment);
-        return laboratoryTestRepository.save(laboratoryTest);
+        medicalHistory.setAppointment(appointment);
+        return medicalHistoryRepository.save(medicalHistory);
     }
 }

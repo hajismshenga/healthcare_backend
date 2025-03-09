@@ -8,16 +8,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-public class Prescription {
+public class DoctorEvaluation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String medicineName;  // Name of the prescribed medicine
-    private String dosage;        // Dosage details
-    private String duration;      // Duration for which the medicine should be taken
-    private String instructions;  // Additional instructions for the patient
+    private int rating;  // Rating scale from 1 to 5
+    private String comment;  // Optional feedback from the patient
 
     // Relationship with Doctor and Patient
     @ManyToOne
@@ -37,36 +35,20 @@ public class Prescription {
         this.id = id;
     }
 
-    public String getMedicineName() {
-        return medicineName;
+    public int getRating() {
+        return rating;
     }
 
-    public void setMedicineName(String medicineName) {
-        this.medicineName = medicineName;
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 
-    public String getDosage() {
-        return dosage;
+    public String getComment() {
+        return comment;
     }
 
-    public void setDosage(String dosage) {
-        this.dosage = dosage;
-    }
-
-    public String getDuration() {
-        return duration;
-    }
-
-    public void setDuration(String duration) {
-        this.duration = duration;
-    }
-
-    public String getInstructions() {
-        return instructions;
-    }
-
-    public void setInstructions(String instructions) {
-        this.instructions = instructions;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public Doctor getDoctor() {
