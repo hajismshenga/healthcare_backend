@@ -1,0 +1,387 @@
+{
+  "info": {
+    "name": "Healthcare API Tests",
+    "description": "Collection for testing Healthcare APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Hospital APIs",
+      "item": [
+        {
+          "name": "Register Hospital",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"General Hospital\",\n    \"address\": \"123 Main St\",\n    \"phoneNumber\": \"555-1234\",\n    \"email\": \"info@generalhospital.com\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/hospitals/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "hospitals", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get All Hospitals",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/hospitals",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "hospitals"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctor APIs",
+      "item": [
+        {
+          "name": "Register Doctor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Dr. John Smith\",\n    \"profession\": \"Cardiologist\",\n    \"email\": \"john.smith@hospital.com\",\n    \"phoneNumber\": \"555-5678\",\n    \"hospitalId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/doctors/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "doctors", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get All Doctors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/doctors",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "doctors"]
+            }
+          }
+        },
+        {
+          "name": "Get Doctor By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/doctors/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "doctors", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patient APIs",
+      "item": [
+        {
+          "name": "Register Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Jane Doe\",\n    \"age\": 35,\n    \"gender\": \"Female\",\n    \"phoneNumber\": \"555-9012\",\n    \"address\": \"456 Oak St\",\n    \"doctorId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/doctors/patients/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "doctors", "patients", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/dashboard/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "dashboard", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Prescriptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/prescriptions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "prescriptions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Lab Tests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/lab-tests/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "lab-tests", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clinical Record APIs",
+      "item": [
+        {
+          "name": "Create Clinical Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"patientId\": 1,\n    \"doctorId\": 1,\n    \"symptoms\": \"Chest pain, shortness of breath\",\n    \"diagnosis\": \"Angina\",\n    \"treatment\": \"Nitroglycerin as needed\",\n    \"notes\": \"Patient should follow up in 2 weeks\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/clinical-records",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "clinical-records"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Clinical Records",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/clinical-records/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "clinical-records", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lab Test APIs",
+      "item": [
+        {
+          "name": "Request Lab Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"patientId\": 1,\n    \"doctorId\": 1,\n    \"laboratoryId\": 1,\n    \"testType\": \"Blood Test\",\n    \"testDescription\": \"Complete Blood Count\",\n    \"clinicalRecordId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/lab-tests/request",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "lab-tests", "request"]
+            }
+          }
+        },
+        {
+          "name": "Get Tests By Patient",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/lab-tests/patient/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "lab-tests", "patient", "1"]
+            }
+          }
+        },
+        {
+          "name": "Add Test Result",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"labTestId\": 1,\n    \"resultDetails\": \"WBC: 7.5, RBC: 4.8, Hemoglobin: 14.2\",\n    \"interpretation\": \"Normal blood count\",\n    \"normalRange\": \"WBC: 4.5-11.0, RBC: 4.5-5.5, Hemoglobin: 13.5-17.5\",\n    \"recommendations\": \"No further action needed\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/lab-tests/results",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "lab-tests", "results"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Second Opinion APIs",
+      "item": [
+        {
+          "name": "Request Second Opinion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"patientId\": 1,\n    \"requestingDoctorId\": 1,\n    \"consultingDoctorId\": 2,\n    \"conditionDescription\": \"Persistent chest pain despite medication\",\n    \"currentTreatment\": \"Nitroglycerin 0.4mg SL PRN\",\n    \"isUrgent\": true,\n    \"clinicalRecordId\": 1\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/patients/request-second-opinion",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "request-second-opinion"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Second Opinion Requests",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8090/api/patients/second-opinion-requests/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "patients", "second-opinion-requests", "1"]
+            }
+          }
+        },
+        {
+          "name": "Provide Second Opinion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"secondOpinion\": \"I recommend cardiac catheterization to rule out coronary artery disease. Current medication regimen is appropriate but may need adjustment based on catheterization results.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/second-opinion-requests/1/provide-opinion",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "second-opinion-requests", "1", "provide-opinion"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Excel Import APIs",
+      "item": [
+        {
+          "name": "Import Doctors",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/path/to/doctors.xlsx"
+                },
+                {
+                  "key": "hospitalId",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8090/api/excel-import/doctors",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8090",
+              "path": ["api", "excel-import", "doctors"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

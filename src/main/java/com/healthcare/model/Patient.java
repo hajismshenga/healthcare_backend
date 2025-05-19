@@ -1,33 +1,44 @@
 package com.healthcare.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.time.*;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Patient {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(unique = true)
+    private String patientId; // Generated patient ID
 
     private String name;
-    private int age;
-    private String username;
-
-    // Add a relationship with Doctor
+    
+    private Integer age;
+    
+    private String gender;
+    
+    private String phoneNumber;
+    
+    private String address;
+    
+    private LocalDate registrationDate;
+    
     @ManyToOne
     @JoinColumn(name = "doctor_id")
-    private Doctor doctor;
+    private Doctor treatingDoctor;
+    
+    private String clinicalSummary; // Patient's clinical information
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id")
+    private User user; // For authentication
 }
