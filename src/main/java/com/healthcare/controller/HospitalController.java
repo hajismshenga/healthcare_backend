@@ -1,9 +1,17 @@
 package com.healthcare.controller;
 
+import com.healthcare.dto.HospitalRegistrationRequest;
+import com.healthcare.dto.LoginRequest;
+import com.healthcare.dto.LoginResponse;
 import com.healthcare.model.Hospital;
 import com.healthcare.service.HospitalService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,40 +24,21 @@ public class HospitalController {
 
     @Autowired
     private HospitalService hospitalService;
-
-    @PostMapping("/register")
-    public ResponseEntity<?> registerHospital(@RequestBody Map<String, Object> request) {
-        try {
-            // Extract hospital data
-            Hospital hospital = new Hospital();
-            hospital.setName((String) request.get("name"));
-            hospital.setOwnership((String) request.get("ownership"));
-            hospital.setDistrict((String) request.get("district"));
-            hospital.setLocation((String) request.get("location"));
-            hospital.setContactInfo((String) request.get("contactInfo"));
-            
-            // Extract credentials
-            String username = (String) request.get("username");
-            String password = (String) request.get("password");
-            
-            // Register hospital
-            Hospital registeredHospital = hospitalService.registerHospital(hospital, username, password);
-            
-            return ResponseEntity.ok(Map.of(
-                "message", "Hospital registered successfully",
-                "hospitalId", registeredHospital.getHospitalId(),
-                "id", registeredHospital.getId()
-            ));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "error", e.getMessage()
-            ));
-        }
+    
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("HospitalController is working!");
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<Hospital>> getAllHospitals() {
+        List<Hospital> hospitals = hospitalService.getAllHospitals();
+        return ResponseEntity.ok(hospitals);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getHospitalById(@PathVariable Long id) {
-        Optional<Hospital> hospital = hospitalService.getHospitalById(id);
+    @GetMapping("/{hospitalId}")
+    public ResponseEntity<?> getHospitalById(@PathVariable String hospitalId) {
+        Optional<Hospital> hospital = hospitalService.getHospitalByHospitalId(hospitalId);
         if (hospital.isPresent()) {
             return ResponseEntity.ok(hospital.get());
         } else {
@@ -57,8 +46,66 @@ public class HospitalController {
         }
     }
 
-    @GetMapping
-    public List<Hospital> getAllHospitals() {
-        return hospitalService.getAllHospitals();
+    @PostMapping("/register")
+    public ResponseEntity<?> registerHospital(@Valid @RequestBody HospitalRegistrationRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", "Validation failed",
+                "errors", bindingResult.getFieldErrors().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                        e -> e.getField(), 
+                        e -> e.getDefaultMessage()
+                    ))
+            ));
+        }
+        
+        try {
+            Hospital hospital = Hospital.builder()
+                .name(request.getName())
+                .ownership(request.getOwnership().toUpperCase())
+                .district(request.getDistrict())
+                .location(request.getLocation())
+                .contactInfo(request.getContactInfo())
+                .build();
+
+            Hospital savedHospital = hospitalService.registerHospital(hospital, request.getUsername(), request.getPassword());
+            
+            return ResponseEntity.status(201).body(Map.of(
+                "status", "success",
+                "message", "Hospital registered successfully",
+                "hospitalId", savedHospital.getHospitalId(),
+                "username", request.getUsername()
+            ));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", ex.getMessage()
+            ));
+        }
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginHospital(@Valid @RequestBody LoginRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", "Validation failed",
+                "errors", bindingResult.getFieldErrors().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                        e -> e.getField(),
+                        e -> e.getDefaultMessage()
+                    ))
+            ));
+        }
+
+        LoginResponse response = hospitalService.authenticateUser(request.getUsername(), request.getPassword());
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+
+
 }

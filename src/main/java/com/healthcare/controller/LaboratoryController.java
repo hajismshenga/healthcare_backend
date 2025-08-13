@@ -1,136 +1,110 @@
 package com.healthcare.controller;
 
-import com.healthcare.model.LabResult;
-import com.healthcare.model.LabTest;
+import com.healthcare.dto.LaboratoryRegistrationRequest;
+import com.healthcare.dto.LaboratoryLoginRequest;
+import com.healthcare.dto.LoginResponse;
 import com.healthcare.model.Laboratory;
-import com.healthcare.service.LabTestService;
 import com.healthcare.service.LaboratoryService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/laboratories")
 public class LaboratoryController {
-
-    @Autowired
-    private LaboratoryService laboratoryService;
     
-    @Autowired
-    private LabTestService labTestService;
+    private final LaboratoryService laboratoryService;
+
+    public LaboratoryController(LaboratoryService laboratoryService) {
+        this.laboratoryService = laboratoryService;
+        log.info("LaboratoryController initialized!");
+    }
+    
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok("LaboratoryController is working!");
+    }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerLaboratory(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> registerLaboratory(@Valid @RequestBody LaboratoryRegistrationRequest request, BindingResult bindingResult) {
+        log.info("Received laboratory registration request: {}", request);
+        
+        if (bindingResult.hasErrors()) {
+            log.warn("Validation failed for laboratory registration: {}", bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", "Validation failed",
+                "errors", bindingResult.getFieldErrors().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                        e -> e.getField(),
+                        e -> e.getDefaultMessage()
+                    ))
+            ));
+        }
+
         try {
-            // Extract laboratory data
-            Laboratory laboratory = new Laboratory();
-            laboratory.setName((String) request.get("name"));
-            laboratory.setSpecialization((String) request.get("specialization"));
+            log.debug("Attempting to register laboratory with ID: {}", request.getLaboratoryId());
+            Laboratory registeredLaboratory = laboratoryService.registerLaboratory(request);
+            log.info("Successfully registered laboratory with ID: {}", request.getLaboratoryId());
             
-            // Extract hospital ID
-            Long hospitalId = Long.valueOf(request.get("hospitalId").toString());
-            
-            // Register laboratory
-            Laboratory registeredLab = laboratoryService.registerLaboratory(laboratory, hospitalId);
-            
-            return ResponseEntity.ok(Map.of(
+            return ResponseEntity.status(201).body(Map.of(
+                "status", "success",
                 "message", "Laboratory registered successfully",
-                "labId", registeredLab.getLabId(),
-                "id", registeredLab.getId(),
-                "username", registeredLab.getUser().getUsername(),
-                "password", "123456"
+                "laboratoryId", registeredLaboratory.getLaboratoryId(),
+                "defaultPassword", "123456"
+            ));
+        } catch (IllegalArgumentException e) {
+            log.error("Error registering laboratory: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", e.getMessage()
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "error", e.getMessage()
+            log.error("Unexpected error registering laboratory: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "status", "error",
+                "message", "An unexpected error occurred: " + e.getMessage()
             ));
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getLaboratoryById(@PathVariable Long id) {
-        Optional<Laboratory> laboratory = laboratoryService.getLaboratoryById(id);
-        if (laboratory.isPresent()) {
-            return ResponseEntity.ok(laboratory.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    @GetMapping("/hospital/{hospitalId}")
+    public ResponseEntity<List<Laboratory>> getLaboratoriesByHospital(@PathVariable String hospitalId) {
+        List<Laboratory> laboratories = laboratoryService.getLaboratoriesByHospital(hospitalId);
+        return ResponseEntity.ok(laboratories);
     }
 
     @GetMapping
     public ResponseEntity<List<Laboratory>> getAllLaboratories() {
-        return ResponseEntity.ok(laboratoryService.getAllLaboratories());
+        List<Laboratory> laboratories = laboratoryService.getAllLaboratories();
+        return ResponseEntity.ok(laboratories);
     }
 
-    @GetMapping("/hospital/{hospitalId}")
-    public ResponseEntity<List<Laboratory>> getLaboratoriesByHospital(@PathVariable Long hospitalId) {
-        return ResponseEntity.ok(laboratoryService.getLaboratoriesByHospital(hospitalId));
-    }
-    
-    @GetMapping("/{labId}/pending-tests")
-    public ResponseEntity<List<LabTest>> getPendingTests(@PathVariable Long labId) {
-        return ResponseEntity.ok(labTestService.getPendingTestsByLaboratory(labId));
-    }
-    
-    @GetMapping("/{labId}/tests")
-    public ResponseEntity<List<LabTest>> getAllTests(@PathVariable Long labId) {
-        return ResponseEntity.ok(labTestService.getTestsByLaboratory(labId));
-    }
-    
-    @GetMapping("/{labId}/results")
-    public ResponseEntity<List<LabResult>> getAllResults(@PathVariable Long labId) {
-        return ResponseEntity.ok(labTestService.getResultsByLaboratory(labId));
-    }
-    
-    @PostMapping("/{labId}/process-test/{testId}")
-    public ResponseEntity<?> processTest(@PathVariable Long labId, @PathVariable Long testId, @RequestBody Map<String, Object> request) {
-        try {
-            String resultDetails = (String) request.get("resultDetails");
-            String interpretation = (String) request.get("interpretation");
-            String normalRange = (String) request.get("normalRange");
-            String notes = (String) request.get("notes");
-            String recommendations = (String) request.get("recommendations");
-            
-            // Verify that the test belongs to this laboratory
-            Optional<LabTest> testOpt = labTestService.getTestById(testId);
-            if (!testOpt.isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Test not found"));
-            }
-            
-            LabTest test = testOpt.get();
-            if (!test.getLaboratory().getId().equals(labId)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "This test does not belong to this laboratory"));
-            }
-            
-            LabResult result = labTestService.addTestResult(testId, resultDetails, interpretation, normalRange, notes, recommendations, recommendations);
-            
-            return ResponseEntity.ok(Map.of(
-                "message", "Test processed successfully",
-                "resultId", result.getId()
-            ));
-        } catch (Exception e) {
+    @PostMapping("/login")
+    public ResponseEntity<?> loginLaboratory(@Valid @RequestBody LaboratoryLoginRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body(Map.of(
-                "error", e.getMessage()
+                "status", "error",
+                "message", "Validation failed",
+                "errors", bindingResult.getFieldErrors().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                        e -> e.getField(),
+                        e -> e.getDefaultMessage()
+                    ))
             ));
         }
-    }
-    
-    @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
-        try {
-            String username = request.get("username");
-            String oldPassword = request.get("oldPassword");
-            String newPassword = request.get("newPassword");
-            
-            laboratoryService.changePassword(username, oldPassword, newPassword);
-            
-            return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+
+        LoginResponse response = laboratoryService.authenticateLaboratory(request.getLaboratoryId(), request.getPassword());
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(401).body(response);
         }
     }
 }

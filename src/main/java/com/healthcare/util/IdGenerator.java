@@ -1,44 +1,64 @@
 package com.healthcare.util;
 
+import com.healthcare.repository.HospitalRepository;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
+/**
+ * Utility class for generating various IDs in the system.
+ * Currently, most IDs are manually assigned, but this class is kept for future use.
+ */
 @Component
 public class IdGenerator {
     
-    private final AtomicInteger hospitalCounter = new AtomicInteger(0);
-    private final AtomicInteger doctorCounter = new AtomicInteger(0);
-    private final AtomicInteger labCounter = new AtomicInteger(0);
-    
     private static final String HOSPITAL_PREFIX = "HOSP";
-    private static final String DOCTOR_PREFIX = "DID";
-    private static final String LAB_PREFIX = "LAB";
-    private static final String SEPARATOR = "/"; // Can be changed to "." if needed
+    private static final String SEPARATOR = "/";
     
+    private final HospitalRepository hospitalRepository;
+
+    public IdGenerator(HospitalRepository hospitalRepository) {
+        this.hospitalRepository = hospitalRepository;
+    }
+
+    /**
+     * Generates a new hospital ID based on the latest one in the database.
+     * @return A new hospital ID in the format "HOSP/001"
+     */
     public String generateHospitalId() {
-        int sequence = hospitalCounter.incrementAndGet();
-        return formatId(HOSPITAL_PREFIX, sequence);
+        // Get the max hospital ID from the database
+        String maxId = hospitalRepository.findMaxHospitalId();
+        
+        // If no hospitals exist yet, start with 1
+        if (maxId == null) {
+            return formatId(HOSPITAL_PREFIX, 1);
+        }
+        
+        // Extract the sequence number from the ID (e.g., "HOSP/001" -> 1)
+        int sequence = extractSequence(maxId);
+        
+        // Increment and return the new ID
+        return formatId(HOSPITAL_PREFIX, sequence + 1);
     }
     
-    public String generateDoctorId() {
-        int sequence = doctorCounter.incrementAndGet();
-        return formatId(DOCTOR_PREFIX, sequence);
-    }
-    
-    public String generateLabId() {
-        int sequence = labCounter.incrementAndGet();
-        return formatId(LAB_PREFIX, sequence);
+    private int extractSequence(String id) {
+        try {
+            // Extract the numeric part after the last separator
+            String[] parts = id.split(SEPARATOR);
+            if (parts.length > 1) {
+                return Integer.parseInt(parts[1]);
+            }
+            // If format is unexpected, try to extract any numbers
+            String numberStr = id.replaceAll("[^0-9]", "");
+            if (!numberStr.isEmpty()) {
+                return Integer.parseInt(numberStr);
+            }
+        } catch (NumberFormatException e) {
+            // If parsing fails, start from 1
+            return 0;
+        }
+        return 0;
     }
     
     private String formatId(String prefix, int sequence) {
         return String.format("%s%s%03d", prefix, SEPARATOR, sequence);
-    }
-    
-    
-    public void setCounters(int hospitalCount, int doctorCount, int labCount) {
-        hospitalCounter.set(hospitalCount);
-        doctorCounter.set(doctorCount);
-        labCounter.set(labCount);
     }
 }

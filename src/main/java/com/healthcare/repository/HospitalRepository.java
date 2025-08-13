@@ -1,13 +1,19 @@
 package com.healthcare.repository;
 
 import com.healthcare.model.Hospital;
-import jakarta.persistence.*;
+import com.healthcare.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import java.util.*;
 
+import java.util.Optional;
+
+@Repository
 public interface HospitalRepository extends JpaRepository<Hospital, Long> {
     Optional<Hospital> findByHospitalId(String hospitalId);
-    List<Hospital> findByUserUsername(String username);
+    boolean existsByHospitalId(String hospitalId);
+    Optional<Hospital> findByUser(User user);
+    
+    @Query("SELECT MAX(h.hospitalId) FROM Hospital h")
+    String findMaxHospitalId();
 }
