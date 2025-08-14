@@ -11,7 +11,6 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,13 +36,11 @@ public class HospitalController {
     }
 
     @GetMapping("/{hospitalId}")
-    public ResponseEntity<?> getHospitalById(@PathVariable String hospitalId) {
+    public ResponseEntity<Hospital> getHospitalById(@PathVariable String hospitalId) {
         Optional<Hospital> hospital = hospitalService.getHospitalByHospitalId(hospitalId);
-        if (hospital.isPresent()) {
-            return ResponseEntity.ok(hospital.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        return hospital
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/register")
@@ -63,7 +60,7 @@ public class HospitalController {
         try {
             Hospital hospital = Hospital.builder()
                 .name(request.getName())
-                .ownership(request.getOwnership().toUpperCase())
+                .ownership(request.getOwnership()) // Service will handle uppercase conversion
                 .district(request.getDistrict())
                 .location(request.getLocation())
                 .contactInfo(request.getContactInfo())
@@ -81,6 +78,11 @@ public class HospitalController {
             return ResponseEntity.badRequest().body(Map.of(
                 "status", "error",
                 "message", ex.getMessage()
+            ));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "status", "error",
+                "message", "An unexpected error occurred: " + ex.getMessage()
             ));
         }
     }

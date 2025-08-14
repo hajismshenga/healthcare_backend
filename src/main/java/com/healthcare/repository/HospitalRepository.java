@@ -14,6 +14,6 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
     boolean existsByHospitalId(String hospitalId);
     Optional<Hospital> findByUser(User user);
     
-    @Query("SELECT MAX(h.hospitalId) FROM Hospital h")
+    @Query("SELECT MAX(h.hospitalId) FROM Hospital h WHERE h.hospitalId IS NOT NULL")
     String findMaxHospitalId();
 }

@@ -64,6 +64,11 @@ public class HospitalService {
             hospital.setHospitalId(hospitalId);
             hospital.setUser(user);
             
+            // Ensure ownership is uppercase
+            if (hospital.getOwnership() != null) {
+                hospital.setOwnership(hospital.getOwnership().toUpperCase());
+            }
+            
             Hospital savedHospital = hospitalRepository.save(hospital);
             log.info("Hospital registered successfully with ID: {}", savedHospital.getId());
             

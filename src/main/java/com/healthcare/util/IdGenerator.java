@@ -24,23 +24,32 @@ public class IdGenerator {
      * @return A new hospital ID in the format "HOSP/001"
      */
     public String generateHospitalId() {
-        // Get the max hospital ID from the database
-        String maxId = hospitalRepository.findMaxHospitalId();
-        
-        // If no hospitals exist yet, start with 1
-        if (maxId == null) {
+        try {
+            // Get the max hospital ID from the database
+            String maxId = hospitalRepository.findMaxHospitalId();
+            
+            // If no hospitals exist yet, start with 1
+            if (maxId == null || maxId.trim().isEmpty()) {
+                return formatId(HOSPITAL_PREFIX, 1);
+            }
+            
+            // Extract the sequence number from the ID (e.g., "HOSP/001" -> 1)
+            int sequence = extractSequence(maxId);
+            
+            // Increment and return the new ID
+            return formatId(HOSPITAL_PREFIX, sequence + 1);
+        } catch (Exception e) {
+            // If any error occurs, start from 1
             return formatId(HOSPITAL_PREFIX, 1);
         }
-        
-        // Extract the sequence number from the ID (e.g., "HOSP/001" -> 1)
-        int sequence = extractSequence(maxId);
-        
-        // Increment and return the new ID
-        return formatId(HOSPITAL_PREFIX, sequence + 1);
     }
     
     private int extractSequence(String id) {
         try {
+            if (id == null || id.trim().isEmpty()) {
+                return 0;
+            }
+            
             // Extract the numeric part after the last separator
             String[] parts = id.split(SEPARATOR);
             if (parts.length > 1) {

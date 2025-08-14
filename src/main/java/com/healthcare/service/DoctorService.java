@@ -5,8 +5,10 @@ import com.healthcare.dto.LoginResponse;
 import com.healthcare.exception.HospitalNotFoundException;
 import com.healthcare.model.Doctor;
 import com.healthcare.model.Hospital;
+import com.healthcare.model.User;
 import com.healthcare.repository.DoctorRepository;
 import com.healthcare.repository.HospitalRepository;
+import com.healthcare.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,11 +25,14 @@ public class DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final HospitalRepository hospitalRepository;
+    private final UserRepository userRepository;
 
     public DoctorService(DoctorRepository doctorRepository, 
-                        HospitalRepository hospitalRepository) {
+                        HospitalRepository hospitalRepository,
+                        UserRepository userRepository) {
         this.doctorRepository = doctorRepository;
         this.hospitalRepository = hospitalRepository;
+        this.userRepository = userRepository;
     }
     
     @Transactional
@@ -50,13 +55,29 @@ public class DoctorService {
                 });
 
             log.debug("Creating new doctor entity for ID: {}", request.getDoctorId());
+            
+            // Create user first
+            User user = new User();
+            user.setUsername(request.getDoctorId().toLowerCase());
+            user.setPassword(DEFAULT_PASSWORD);
+            user.setRole("DOCTOR");
+            
+            // Save user first
+            user = userRepository.save(user);
+            log.debug("User saved with ID: {}", user.getId());
+            
+            // Create doctor with user relationship
             Doctor doctor = Doctor.builder()
                     .name(request.getName())
                     .profession(request.getProfession())
                     .doctorId(request.getDoctorId())
                     .password(DEFAULT_PASSWORD)
                     .hospital(hospital)
+                    .user(user)
                     .build();
+                    
+            // Set the bidirectional relationship
+            user.setDoctor(doctor);
 
             log.debug("Saving doctor to database: {}", doctor);
             Doctor savedDoctor = doctorRepository.save(doctor);
@@ -85,19 +106,32 @@ public class DoctorService {
     }
     
     public LoginResponse authenticateDoctor(String doctorId, String password) {
+        // Find the doctor by ID
         Optional<Doctor> doctorOpt = doctorRepository.findByDoctorId(doctorId);
         
+        // Check if doctor exists
         if (doctorOpt.isEmpty()) {
+            log.warn("Doctor not found with ID: {}", doctorId);
             return LoginResponse.error("Invalid doctor ID or password");
         }
         
         Doctor doctor = doctorOpt.get();
-        if (!doctor.getPassword().equals(password)) {
+        User user = doctor.getUser();
+        
+        // Check if user exists and password matches
+        if (user == null) {
+            log.warn("No user account found for doctor ID: {}", doctorId);
+            return LoginResponse.error("Invalid doctor ID or password");
+        }
+        
+        if (!password.equals(user.getPassword())) {
+            log.warn("Invalid password for doctor ID: {}", doctorId);
             return LoginResponse.error("Invalid doctor ID or password");
         }
         
         // In a real application, you would generate a proper JWT token here
         String token = "doctor-token-" + doctorId;
+        log.info("Successfully authenticated doctor: {}", doctorId);
         
         return LoginResponse.fromDoctor(doctor, token);
     }
