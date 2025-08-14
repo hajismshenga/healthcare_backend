@@ -1,6 +1,7 @@
 package com.healthcare.service;
 
 import com.healthcare.dto.LabTestRequest;
+import com.healthcare.dto.LabResultSubmissionRequest;
 import com.healthcare.exception.DoctorNotFoundException;
 import com.healthcare.exception.LaboratoryNotFoundException;
 import com.healthcare.exception.PatientNotFoundException;
@@ -156,5 +157,42 @@ public class LabTestService {
         labTest.setCompletedDate(LocalDateTime.now());
         
         return labTestRepository.save(labTest);
+    }
+
+    @Transactional
+    public LabTest addTestResultByIdentifiers(LabResultSubmissionRequest request) {
+        String normalizedPatientId = request.getPatientId();
+        if ((normalizedPatientId == null || normalizedPatientId.isBlank()) && request.getPatientName() != null) {
+            // Try to find patient by name exactly; if multiple, prefer the most recent pending test
+            List<Patient> candidates = patientRepository.findAll().stream()
+                    .filter(p -> request.getPatientName().equalsIgnoreCase(p.getName()))
+                    .toList();
+            if (candidates.isEmpty()) {
+                throw new IllegalArgumentException("Patient not found with name: " + request.getPatientName());
+            }
+            // If multiple, we will search tests per candidate below and pick the first with pending
+            for (Patient p : candidates) {
+                List<LabTest> tests = labTestRepository.findLatestPendingByPatientAndDoctor(p.getPatientId(), request.getDoctorId());
+                if (!tests.isEmpty()) {
+                    normalizedPatientId = p.getPatientId();
+                    break;
+                }
+            }
+            if (normalizedPatientId == null) {
+                throw new IllegalArgumentException("No pending lab test found for the provided patient name and doctor");
+            }
+        }
+
+        List<LabTest> pendingTests = labTestRepository.findLatestPendingByPatientAndDoctor(normalizedPatientId, request.getDoctorId());
+        if (pendingTests.isEmpty()) {
+            throw new IllegalArgumentException("No pending lab test found for patient ID: " + normalizedPatientId + " and doctor ID: " + request.getDoctorId());
+        }
+        LabTest latest = pendingTests.get(0);
+
+        latest.setTestResult(request.getResult());
+        latest.setStatus(LabTest.TestStatus.COMPLETED);
+        latest.setCompletedDate(LocalDateTime.now());
+
+        return labTestRepository.save(latest);
     }
 }

@@ -1,6 +1,7 @@
 package com.healthcare.controller;
 
 import com.healthcare.dto.LabTestRequest;
+import com.healthcare.dto.LabResultSubmissionRequest;
 import com.healthcare.model.LabTest;
 import com.healthcare.service.LabTestService;
 import jakarta.validation.Valid;
@@ -151,6 +152,40 @@ public class LabTestController {
         try {
             LabTest updatedTest = labTestService.addTestResult(testId, testResult);
             return ResponseEntity.ok(updatedTest);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/results")
+    public ResponseEntity<?> submitLabResult(@Valid @RequestBody LabResultSubmissionRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "error",
+                "message", "Validation failed",
+                "errors", bindingResult.getFieldErrors().stream()
+                    .collect(java.util.stream.Collectors.toMap(
+                        e -> e.getField(),
+                        e -> e.getDefaultMessage()
+                    ))
+            ));
+        }
+
+        try {
+            LabTest updated = labTestService.addTestResultByIdentifiers(request);
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Lab result submitted and linked to latest pending test",
+                "testId", updated.getTestId(),
+                "patientId", updated.getPatient().getPatientId(),
+                "patientName", updated.getPatient().getName(),
+                "doctorId", updated.getDoctor().getDoctorId(),
+                "result", updated.getTestResult(),
+                "completedDate", updated.getCompletedDate()
+            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(
                 "status", "error",

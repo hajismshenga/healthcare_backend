@@ -13,4 +13,7 @@ public interface DoctorRepository extends JpaRepository<Doctor, Long> {
 
     // Retrieve doctors by hospital
     List<Doctor> findByHospital(Hospital hospital);
+    
+    // Retrieve doctors by profession
+    List<Doctor> findByProfession(String profession);
 }

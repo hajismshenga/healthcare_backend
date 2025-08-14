@@ -33,4 +33,8 @@ public interface LabTestRepository extends JpaRepository<LabTest, Long> {
     
     @org.springframework.data.jpa.repository.Query("SELECT MAX(lt.testId) FROM LabTest lt WHERE lt.testId LIKE %:date%")
     String findMaxTestIdByDate(@org.springframework.data.repository.query.Param("date") String date);
+
+    @org.springframework.data.jpa.repository.Query("SELECT lt FROM LabTest lt WHERE lt.patient.patientId = :patientId AND lt.doctor.doctorId = :doctorId AND lt.status <> 'COMPLETED' ORDER BY lt.requestedDate DESC")
+    List<LabTest> findLatestPendingByPatientAndDoctor(@org.springframework.data.repository.query.Param("patientId") String patientId,
+                                                     @org.springframework.data.repository.query.Param("doctorId") String doctorId);
 }
